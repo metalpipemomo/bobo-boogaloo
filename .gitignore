@@ -1,0 +1,8 @@
+.cmake/
+CMakeCache.txt
+.cache/
+Makefile
+cross_platform_test
+compile_commands.json
+CMakeFiles/
+cmake_install.cmake
