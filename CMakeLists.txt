@@ -19,7 +19,7 @@ include_directories(libs/glm)
 find_package(Vulkan REQUIRED)
 
 # Define your executable target
-add_executable(cross_platform_test main.cpp)
+add_executable(cross_platform_test src/main.cpp)
 
 # Link your target against GLFW and Vulkan
 target_link_libraries(cross_platform_test glfw Vulkan::Vulkan)
