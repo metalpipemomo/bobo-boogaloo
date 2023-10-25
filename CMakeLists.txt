@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.25)
 
+if(NOT "${CMAKE_BINARY_DIR}" MATCHES "/build$")
+    message(FATAL_ERROR "Please create a 'build' directory and run CMake from there. This helps to keep the source directory clean.")
+endif()
+
 project(cross_platform_test)
 
 set(CMAKE_CXX_STANDARD 20)
