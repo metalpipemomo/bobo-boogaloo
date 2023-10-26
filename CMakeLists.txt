@@ -32,7 +32,7 @@ if(NOT Vulkan_FOUND)
         message(STATUS "Starting Windows install...")
         
         execute_process(
-            COMMAND sdk/VulkanSDK.exe
+            COMMAND ${CMAKE_SOURCE_DIR}/sdk/VulkanSDK.exe
             RESULT_VARIABLE installer_result
         )
 
