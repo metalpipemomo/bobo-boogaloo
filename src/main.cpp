@@ -1,11 +1,3 @@
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/mat4x4.hpp>
-#include <glm/vec4.hpp>
-
 #include <Jolt/Jolt.h>
 #include "Jolt/Core/Memory.h"
 #include <Jolt/RegisterTypes.h>
@@ -19,7 +11,11 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyActivationListener.h>
 
+#include <stdexcept>
+#include <cstdlib>
 #include <iostream>
+
+#include "HelloTriangle.h"
 
 // Disable common warnings triggered by Jolt, you can use JPH_SUPPRESS_WARNING_PUSH / JPH_SUPPRESS_WARNING_POP to store and restore the warning state
 JPH_SUPPRESS_WARNINGS
@@ -30,26 +26,16 @@ using namespace JPH;
 int main()
 {
     RegisterDefaultAllocator();
-    glfwInit();
+    HelloTriangle app{};
 
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow *window =
-      glfwCreateWindow(800, 600, "Vulkan window", nullptr, nullptr);
-
-    uint32_t extensionCount = 0;
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-
-    std::cout << extensionCount << " extensions supported" << std::endl;
-
-    glm::mat4 matrix;
-    glm::vec4 vec;
-    auto test = matrix * vec;
-
-    while (!glfwWindowShouldClose(window)) {
-    glfwPollEvents();
+    try
+    {
+        app.Run();
     }
-
-    glfwDestroyWindow(window);
-
-    glfwTerminate();
+    catch (const std::exception& e)
+    {
+        std::cout << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 }
