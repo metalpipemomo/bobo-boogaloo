@@ -21,7 +21,7 @@ include_directories(libs/glm)
 add_subdirectory(libs/Jolt/Build)
 
 # Find Vulkan package
-find_package(Vulkan REQUIRED)
+find_package(Vulkan QUIET)
 
 # If the package is not found, execute the installer
 if(NOT Vulkan_FOUND)
