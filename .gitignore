@@ -7,3 +7,4 @@ compile_commands.json
 CMakeFiles/
 cmake_install.cmake
 build/
+.DS_Store
