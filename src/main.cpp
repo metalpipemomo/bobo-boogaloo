@@ -37,5 +37,6 @@ int main()
         std::cout << e.what() << std::endl;
         return EXIT_FAILURE;
     }
+
     return EXIT_SUCCESS;
 }
