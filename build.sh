@@ -1,5 +1,7 @@
 #!/bin/bash
+git submodule update --init --recursive
 ./clean.sh
-mkdir build
 cd build
 cmake ..
+cd ..
+./run.sh

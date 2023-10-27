@@ -1,6 +1,5 @@
 call git submodule update --init --recursive
-call bash -c "./clean.sh"
-call mkdir build
+call clean
 cd build
 call cmake ..
 pause

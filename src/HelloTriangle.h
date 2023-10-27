@@ -55,6 +55,11 @@ void HelloTriangle::Init()
     glfwTerminate();
 }
 
+void HelloTriangle::Loop()
+{
+
+}
+
 void HelloTriangle::Cleanup()
 {
 

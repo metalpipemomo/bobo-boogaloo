@@ -6,5 +6,6 @@ cross_platform_test
 compile_commands.json
 CMakeFiles/
 cmake_install.cmake
-build/
+build/*
+!build/README.md
 .DS_Store

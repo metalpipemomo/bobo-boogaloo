@@ -1,5 +1,5 @@
 #!/bin/bash
-cmake .
+cd build/
 make
 
 DIR_NAME=$(basename $(pwd))

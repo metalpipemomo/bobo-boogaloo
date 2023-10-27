@@ -58,7 +58,9 @@ endif()
 
 
 # Define your executable target
-add_executable(cross_platform_test src/main.cpp)
+add_executable(cross_platform_test 
+    src/HelloTriangle.h
+    src/main.cpp)
 
 # Link your target against GLFW and Vulkan
 target_link_libraries(cross_platform_test glfw Jolt Vulkan::Vulkan)
