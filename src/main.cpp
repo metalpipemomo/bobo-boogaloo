@@ -14,6 +14,8 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <iostream>
+#include <unistd.h>
+#include <cstring>
 
 #include "HelloTriangle.h"
 
@@ -27,6 +29,10 @@ int main()
 {
     RegisterDefaultAllocator();
     HelloTriangle app{};
+
+    char buf[PATH_MAX];
+    getcwd(buf, sizeof(buf));
+    std::cout << buf << std::endl;
 
     try
     {

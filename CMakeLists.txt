@@ -58,13 +58,19 @@ foreach(SHADER ${SHADER_SOURCES})
     get_filename_component(SHADER_PATH ${SHADER} DIRECTORY)
     get_filename_component(SUB_DIR_NAME ${SHADER_PATH} NAME)
 
+    file(RELATIVE_PATH RELATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders" ${SHADER_PATH})
+
+    # Set the output SPIR-V path using the relative path inside the build directory
     if(SHADER_EXT STREQUAL ".vert")
-        set(SPIRV "${SHADER_PATH}/${SHADER_NAME}.vert.spv")
+        set(SPIRV "${CMAKE_CURRENT_BINARY_DIR}/${RELATIVE_PATH}/${SHADER_NAME}.vert.spv")
     elseif(SHADER_EXT STREQUAL ".frag")
-        set(SPIRV "${SHADER_PATH}/${SHADER_NAME}.frag.spv")
+        set(SPIRV "${CMAKE_CURRENT_BINARY_DIR}/${RELATIVE_PATH}/${SHADER_NAME}.frag.spv")
     else()
         message(FATAL_ERROR "Unsupported shader extension: ${SHADER_EXT}")
     endif()
+
+    # Ensure the destination directory exists
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${RELATIVE_PATH}")
 
     string(REPLACE "/" "_" SANITIZED_TARGET_NAME ${SPIRV})
     set(TARGET_NAME "compile_shaders_${SANITIZED_TARGET_NAME}")
