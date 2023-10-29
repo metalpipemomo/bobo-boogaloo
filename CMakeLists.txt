@@ -25,37 +25,53 @@ include_directories(libs/glm)
 add_subdirectory(libs/Jolt/Build)
 
 # Find Vulkan package
-find_package(Vulkan QUIET)
+find_package(Vulkan REQUIRED)
 
-# If the package is not found, execute the installer
-if(NOT Vulkan_FOUND)
-    message(STATUS "Vulkan not found! Attempting to install...")
+# Function to compile GLSL to SPIR-V
+function(compile_glsl source_file target_file)
+    string(REPLACE "/" "_" SANITIZED_TARGET_NAME ${target_file})
+    add_custom_command(
+        OUTPUT ${target_file}
+        COMMAND ${Vulkan_GLSLC_EXECUTABLE} ${source_file} -o ${target_file}
+        DEPENDS ${source_file}
+        COMMENT "Compiling GLSL ${source_file} to SPIR-V"
+    )
+    add_custom_target(
+        compile_shaders_${SANITIZED_TARGET_NAME} ALL
+        DEPENDS ${target_file}
+    )
+endfunction(compile_glsl)
 
-    # Run the installer executable/script
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-        message(STATUS "Starting Windows install...")
-        
-        execute_process(
-            COMMAND ${CMAKE_SOURCE_DIR}/sdk/VulkanSDK.exe
-            RESULT_VARIABLE installer_result
-        )
+# Glob shader files recursively
+file(GLOB_RECURSE SHADER_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/*.vert"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/*.frag"
+)
 
-    elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-        message(STATUS "The installation file is in sdk/VulkanSDK.dmg, do it yourself...")
+# Initialize an empty list to collect all shader targets
+set(ALL_SHADER_TARGETS "")
 
+# Loop through an empty list to collect all shader targets 
+foreach(SHADER ${SHADER_SOURCES})
+    get_filename_component(SHADER_NAME ${SHADER} NAME_WE)
+    get_filename_component(SHADER_EXT ${SHADER} EXT)
+    get_filename_component(SHADER_PATH ${SHADER} DIRECTORY)
+    get_filename_component(SUB_DIR_NAME ${SHADER_PATH} NAME)
+
+    if(SHADER_EXT STREQUAL ".vert")
+        set(SPIRV "${SHADER_PATH}/${SHADER_NAME}.vert.spv")
+    elseif(SHADER_EXT STREQUAL ".frag")
+        set(SPIRV "${SHADER_PATH}/${SHADER_NAME}.frag.spv")
     else()
-        message(STATUS "Your system is not supported!")
-
+        message(FATAL_ERROR "Unsupported shader extension: ${SHADER_EXT}")
     endif()
 
-    # Check if the installer was successful
-    if(installer_result)
-        message(FATAL_ERROR "Failed to install Vulkan! Please install it manually.")
-    else()
-        message(STATUS "SomePackage installed successfully!")
-    endif()
-endif()
-
+    string(REPLACE "/" "_" SANITIZED_TARGET_NAME ${SPIRV})
+    set(TARGET_NAME "compile_shaders_${SANITIZED_TARGET_NAME}")
+    compile_glsl(${SHADER} ${SPIRV})
+    
+    list(APPEND ALL_SHADER_TARGETS ${TARGET_NAME})
+endforeach(SHADER)
 
 # Define your executable target
 add_executable(cross_platform_test 
@@ -64,6 +80,8 @@ add_executable(cross_platform_test
 
 # Link your target against GLFW and Vulkan
 target_link_libraries(cross_platform_test glfw Jolt Vulkan::Vulkan)
+
+add_dependencies(cross_platform_test ${ALL_SHADER_TARGETS})
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT cross_platform_test)
 

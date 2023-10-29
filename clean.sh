@@ -17,6 +17,7 @@ CACHE_PATH="$BUILD_DIR/$CACHE_FILE"
 if [ -f "$CACHE_PATH" ]; then
     # Delete the CMakeCache.txt file
     rm -rf "$CACHE_PATH"
+    rm -rf "CMakeFiles"
 
     if [ $? -ne 0 ]; then
         echo "Error: Failed to delete $CACHE_PATH."
