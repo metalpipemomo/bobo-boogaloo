@@ -29,7 +29,13 @@ const u32 WIDTH = 800;
 const u32 HEIGHT = 600;
 
 const std::vector<const char*> VALIDATION_LAYERS = { "VK_LAYER_KHRONOS_validation" };
-const std::vector<const char*> DEVICE_EXTENSIONS = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, "VK_KHR_portability_subset" };
+const std::vector<const char*> DEVICE_EXTENSIONS = 
+{ 
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+    #ifdef MAC_TARGET
+    "VK_KHR_portability_subset"
+    #endif
+};
 
 #ifdef NDEBUG
 const bool ENABLE_VALIDATION_LAYERS = false;
@@ -299,7 +305,9 @@ void HelloTriangle::CreateVulkanInstance()
     auto extensions = GetRequiredExtensions();
 
     extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+    #ifdef MAC_TARGET
     extensions.emplace_back("VK_KHR_get_physical_device_properties2");
+    #endif
 
     VkInstanceCreateInfo createInfo{};
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};

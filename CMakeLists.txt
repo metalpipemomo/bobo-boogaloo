@@ -4,7 +4,7 @@ if(NOT "${CMAKE_BINARY_DIR}" MATCHES "/build$")
     message(FATAL_ERROR "Please create a 'build' directory and run CMake from there. This helps to keep the source directory clean.")
 endif()
 
-project(cross_platform_test)
+project(bobo-boogaloo)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -28,8 +28,8 @@ add_subdirectory(libs/Jolt/Build)
 find_package(Vulkan REQUIRED)
 
 # Function to compile GLSL to SPIR-V
-function(compile_glsl source_file target_file)
-    string(REPLACE "/" "_" SANITIZED_TARGET_NAME ${target_file})
+function(compile_glsl source_file target_file target_name)
+
     add_custom_command(
         OUTPUT ${target_file}
         COMMAND ${Vulkan_GLSLC_EXECUTABLE} ${source_file} -o ${target_file}
@@ -37,7 +37,7 @@ function(compile_glsl source_file target_file)
         COMMENT "Compiling GLSL ${source_file} to SPIR-V"
     )
     add_custom_target(
-        compile_shaders_${SANITIZED_TARGET_NAME} ALL
+        compile_shaders_${target_name} ALL
         DEPENDS ${target_file}
     )
 endfunction(compile_glsl)
@@ -51,12 +51,11 @@ file(GLOB_RECURSE SHADER_SOURCES
 # Initialize an empty list to collect all shader targets
 set(ALL_SHADER_TARGETS "")
 
-# Loop through an empty list to collect all shader targets 
+# Loop through shader sources to collect all shader targets
 foreach(SHADER ${SHADER_SOURCES})
     get_filename_component(SHADER_NAME ${SHADER} NAME_WE)
     get_filename_component(SHADER_EXT ${SHADER} EXT)
     get_filename_component(SHADER_PATH ${SHADER} DIRECTORY)
-    get_filename_component(SUB_DIR_NAME ${SHADER_PATH} NAME)
 
     file(RELATIVE_PATH RELATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders" ${SHADER_PATH})
 
@@ -72,24 +71,36 @@ foreach(SHADER ${SHADER_SOURCES})
     # Ensure the destination directory exists
     file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${RELATIVE_PATH}")
 
-    string(REPLACE "/" "_" SANITIZED_TARGET_NAME ${SPIRV})
-    set(TARGET_NAME "compile_shaders_${SANITIZED_TARGET_NAME}")
-    compile_glsl(${SHADER} ${SPIRV})
+    # Generate a sanitized target name using the relative path and shader name
+    string(REPLACE "\\" "_" TEMP_SANITIZED_DIR_NAME ${RELATIVE_PATH})
+    string(REPLACE "/" "_" TEMP_SANITIZED_DIR_NAME_2 ${TEMP_SANITIZED_DIR_NAME})
+    string(REPLACE ":" "_" SANITIZED_DIR_NAME ${TEMP_SANITIZED_DIR_NAME_2})
+
     
+    set(SANITIZED_TARGET_NAME "${SANITIZED_DIR_NAME}_${SHADER_NAME}${SHADER_EXT}")
+    set(TARGET_NAME "compile_shaders_${SANITIZED_TARGET_NAME}")
+
+    compile_glsl(${SHADER} ${SPIRV} ${SANITIZED_TARGET_NAME})
+
     list(APPEND ALL_SHADER_TARGETS ${TARGET_NAME})
 endforeach(SHADER)
 
 # Define your executable target
-add_executable(cross_platform_test 
+add_executable(bobo-boogaloo
     src/HelloTriangle.h
     src/main.cpp)
 
+# Preprocessor Macro
+if (NOT MSVC)
+    target_compile_definitions(bobo-boogaloo PRIVATE MAC_TARGET)
+endif()
+
 # Link your target against GLFW and Vulkan
-target_link_libraries(cross_platform_test glfw Jolt Vulkan::Vulkan)
+target_link_libraries(bobo-boogaloo glfw Jolt Vulkan::Vulkan)
 
-add_dependencies(cross_platform_test ${ALL_SHADER_TARGETS})
+add_dependencies(bobo-boogaloo ${ALL_SHADER_TARGETS})
 
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT cross_platform_test)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT bobo-boogaloo)
 
 if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json")
     execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
