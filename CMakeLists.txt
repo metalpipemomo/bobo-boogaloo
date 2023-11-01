@@ -88,7 +88,10 @@ endforeach(SHADER)
 # Define your executable target
 add_executable(bobo-boogaloo
     src/HelloTriangle.h
-    src/main.cpp)
+    src/main.cpp
+    src/physics/Physics.h
+    src/physics/Rigidbody.h
+)
 
 # Preprocessor Macro
 if (NOT MSVC)

@@ -20,6 +20,9 @@
 #include <fstream>
 #include <cstdint>
 
+#include "physics/Physics.h"
+#include "physics/Rigidbody.h"
+
 using i32 = int;
 using u32 = unsigned int;
 using f32 = float;
@@ -182,6 +185,8 @@ void HelloTriangle::Init()
 {
     InitWindow();
     InitVulkan();
+   
+    Physics::Init(); 
 }
 
 void HelloTriangle::InitWindow()
@@ -1033,10 +1038,30 @@ void HelloTriangle::DrawFrame()
 
 void HelloTriangle::Update()
 {
+    
+
+    Rigidbody* SphereRB = new Rigidbody(new SphereShape(0.5f), RVec3(0.0, 10, 0.0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+
+    Rigidbody* SphereRB2 = new Rigidbody(new SphereShape(0.5f), RVec3(10, 2, 0.0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+
+    Rigidbody* floor = new Rigidbody(new BoxShape(RVec3(100.0, 1.0, 100.0)), RVec3(0.0, -1.0, 0.0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+
+    SphereRB->AddLinearVelocity(Vec3(0,0,0));
+    SphereRB->SetBounce(.8f);
+    const float cDeltaTime = 1.0f / 60.0f;
+
+	uint step = 0;
+
     while (!glfwWindowShouldClose(p_Window))
     {
         glfwPollEvents();
         DrawFrame();
+        step++;
+        RVec3 position = SphereRB->GetPosition();
+		Vec3 velocity = SphereRB->GetVelocity();
+		std::cout << "Sphere 1 Step " << step << ": Position = (" << position.GetX() << ", " << position.GetY() << ", " << position.GetZ() << "), Velocity = (" << velocity.GetX() << ", " << velocity.GetY() << ", " << velocity.GetZ() << ")" << std::endl;
+        const int cCollisionSteps = 1;
+		Physics::Update(SphereRB->m_id, cDeltaTime, cCollisionSteps);
     }
 }
 
