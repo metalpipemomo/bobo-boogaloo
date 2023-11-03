@@ -27,6 +27,13 @@ add_subdirectory(libs/Jolt/Build)
 # Find Vulkan package
 find_package(Vulkan REQUIRED)
 
+# Glob shader files recursively
+file(GLOB_RECURSE SHADER_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/*.vert"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/*.frag"
+)
+
+
 # Function to compile GLSL to SPIR-V
 function(compile_glsl source_file target_file target_name)
 
@@ -42,11 +49,6 @@ function(compile_glsl source_file target_file target_name)
     )
 endfunction(compile_glsl)
 
-# Glob shader files recursively
-file(GLOB_RECURSE SHADER_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/*.vert"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/*.frag"
-)
 
 # Initialize an empty list to collect all shader targets
 set(ALL_SHADER_TARGETS "")
