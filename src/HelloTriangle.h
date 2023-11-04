@@ -1201,7 +1201,7 @@ void HelloTriangle::CreateDescriptorSets()
     allocInfo.pSetLayouts = layouts.data();
 
     m_DescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-    if (vkAllocateDescriptorSets(m_LogicalDevice, nullptr, m_DescriptorSets.data()) != VK_SUCCESS)
+    if (vkAllocateDescriptorSets(m_LogicalDevice, &allocInfo, m_DescriptorSets.data()) != VK_SUCCESS)
     {
         throw std::runtime_error("Failed to allocate Descriptor Sets!");
     }
