@@ -19,10 +19,11 @@ option(GLFW_BUILD_EXAMPLES "Build the GLFW example programs" OFF)
 option(GLFW_BUILD_TESTS "Build the GLFW test programs" OFF)
 option(GLFW_BUILD_DOCS "Build the GLFW documentation" OFF)
 
-# Add GLFW submodule and specify GLM include directory
+# Add externals
 add_subdirectory(libs/glfw)
 include_directories(libs/glm)
 add_subdirectory(libs/Jolt/Build)
+include_directories(libs/stb)
 
 # Find Vulkan package
 find_package(Vulkan REQUIRED)
@@ -97,7 +98,7 @@ if (NOT MSVC)
     target_compile_definitions(bobo-boogaloo PRIVATE MAC_TARGET)
 endif()
 
-# Link your target against GLFW and Vulkan
+# Handle linking
 target_link_libraries(bobo-boogaloo glfw Jolt Vulkan::Vulkan)
 
 add_dependencies(bobo-boogaloo ${ALL_SHADER_TARGETS})
