@@ -1124,9 +1124,9 @@ VkFormat HelloTriangle::FindSupportedFormat(const std::vector<VkFormat>& candida
         {
             return format;
         }
-
-        throw std::runtime_error("Failed to find supported Format!");
     }
+   
+    throw std::runtime_error("Failed to find supported Format!");
 }
 
 VkFormat HelloTriangle::FindDepthFormat()
@@ -1152,8 +1152,6 @@ void HelloTriangle::CreateDepthResources()
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_DepthImage, m_DepthImageMemory);
 
     m_DepthImageView = CreateImageView(m_DepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
-
-    TransitionImageLayout(m_DepthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 }
 
  void HelloTriangle::CreateImage(u32 width, u32 height,
@@ -1251,19 +1249,6 @@ void HelloTriangle::TransitionImageLayout(VkImage image, VkFormat format, VkImag
     barrier.subresourceRange.layerCount = 1;
     barrier.srcAccessMask = 0; 
     barrier.dstAccessMask = 0;
-
-    if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-    {
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-        if (HasStencilComponent(format))
-        {
-            barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
-        }
-    } 
-    else
-    {
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    }
 
     VkPipelineStageFlags sourceStage;
     VkPipelineStageFlags destinationStage;
@@ -1702,13 +1687,16 @@ void HelloTriangle::CreateSyncObjects()
 
 void HelloTriangle::CleanSwapChain()
 {
-    for (size_t i = 0; i < m_SwapChainFramebuffers.size(); i++)
+    vkDestroyImageView(m_LogicalDevice, m_DepthImageView, nullptr);
+    vkDestroyImage(m_LogicalDevice, m_DepthImage, nullptr);
+    vkFreeMemory(m_LogicalDevice, m_DepthImageMemory, nullptr);
+    for (auto framebuffer : m_SwapChainFramebuffers)
     {
-        vkDestroyFramebuffer(m_LogicalDevice, m_SwapChainFramebuffers[i], nullptr);
+        vkDestroyFramebuffer(m_LogicalDevice, framebuffer, nullptr);
     }
-    for (size_t i = 0; i < m_SwapChainImageViews.size(); i++)
+    for (auto imageView : m_SwapChainImageViews)
     {
-        vkDestroyImageView(m_LogicalDevice, m_SwapChainImageViews[i], nullptr);
+        vkDestroyImageView(m_LogicalDevice, imageView, nullptr);
     }
 
     vkDestroySwapchainKHR(m_LogicalDevice, m_SwapChain, nullptr);
@@ -1732,6 +1720,7 @@ void HelloTriangle::RecreateSwapChain()
 
     CreateSwapChain();
     CreateImageViews();
+    CreateDepthResources();
     CreateFramebuffers();
 }
 
@@ -1835,32 +1824,32 @@ void HelloTriangle::Update()
 
 void HelloTriangle::Cleanup()
 {
-    for (u32 i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-    {
-        vkDestroySemaphore(m_LogicalDevice, m_RenderFinishedSemaphores[i], nullptr);
-        vkDestroySemaphore(m_LogicalDevice, m_ImageAvailableSemaphores[i], nullptr);
-        vkDestroyFence(m_LogicalDevice, m_InFlightFences[i], nullptr);
-    }
     CleanSwapChain();
-    vkDestroySampler(m_LogicalDevice, m_TextureSampler, nullptr);
-    vkDestroyImageView(m_LogicalDevice, m_TextureImageView, nullptr);
-    vkDestroyImage(m_LogicalDevice, m_TextureImage, nullptr);
-    vkFreeMemory(m_LogicalDevice, m_TextureImageMemory, nullptr);
+    vkDestroyPipeline(m_LogicalDevice, m_GraphicsPipeline, nullptr);
+    vkDestroyPipelineLayout(m_LogicalDevice, m_PipelineLayout, nullptr);
+    vkDestroyRenderPass(m_LogicalDevice, m_RenderPass, nullptr);
     for (u32 i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
         vkDestroyBuffer(m_LogicalDevice, m_UniformBuffers[i], nullptr);
         vkFreeMemory(m_LogicalDevice, m_UniformBuffersMemory[i], nullptr);
     }
     vkDestroyDescriptorPool(m_LogicalDevice, m_DescriptorPool, nullptr);
+    vkDestroySampler(m_LogicalDevice, m_TextureSampler, nullptr);
+    vkDestroyImageView(m_LogicalDevice, m_TextureImageView, nullptr);
+    vkDestroyImage(m_LogicalDevice, m_TextureImage, nullptr);
+    vkFreeMemory(m_LogicalDevice, m_TextureImageMemory, nullptr);
     vkDestroyDescriptorSetLayout(m_LogicalDevice, m_DescriptorSetLayout, nullptr);
     vkDestroyBuffer(m_LogicalDevice, m_IndexBuffer, nullptr);
     vkFreeMemory(m_LogicalDevice, m_IndexBufferMemory, nullptr);
     vkDestroyBuffer(m_LogicalDevice, m_VertexBuffer, nullptr);
     vkFreeMemory(m_LogicalDevice, m_VertexBufferMemory, nullptr);
+    for (u32 i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+    {
+        vkDestroySemaphore(m_LogicalDevice, m_RenderFinishedSemaphores[i], nullptr);
+        vkDestroySemaphore(m_LogicalDevice, m_ImageAvailableSemaphores[i], nullptr);
+        vkDestroyFence(m_LogicalDevice, m_InFlightFences[i], nullptr);
+    }
     vkDestroyCommandPool(m_LogicalDevice, m_CommandPool, nullptr);
-    vkDestroyPipeline(m_LogicalDevice, m_GraphicsPipeline, nullptr);
-    vkDestroyPipelineLayout(m_LogicalDevice, m_PipelineLayout, nullptr);
-    vkDestroyRenderPass(m_LogicalDevice, m_RenderPass, nullptr);
     vkDestroyDevice(m_LogicalDevice, nullptr);
     vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
     if (ENABLE_VALIDATION_LAYERS)
