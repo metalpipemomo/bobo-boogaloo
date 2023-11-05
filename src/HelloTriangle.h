@@ -7,13 +7,18 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "glm/ext/matrix_transform.hpp"
-#include "glm/ext/matrix_clip_space.hpp"
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/gtx/hash.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
 
 #include <iostream>
 #include <stdexcept>
@@ -28,6 +33,7 @@
 #include <array>
 #include <cstddef>
 #include <chrono>
+#include <unordered_map>
 
 using i32 = int;
 using u16 = unsigned short;
@@ -144,7 +150,23 @@ struct Vertex
 
         return attributeDescriptions;
     }
+
+    bool operator==(const Vertex& other) const 
+    {
+        return m_Position == other.m_Position && m_Color == other.m_Color && m_TexCoord == other.m_TexCoord;
+    }
 };
+
+namespace std
+{
+    template<> struct hash<Vertex>
+    {
+        size_t operator()(Vertex const& vertex) const 
+        {
+            return ((hash<glm::vec3>()(vertex.m_Position) ^ (hash<glm::vec3>()(vertex.m_Color) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.m_TexCoord) << 1);
+        }
+    };
+}
 
 struct UniformBufferObject
 {
@@ -199,6 +221,7 @@ class HelloTriangle
         void CreateTextureImageView();
         void CreateTextureSampler();
         u32 FindMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
+        void LoadModel();
         VkCommandBuffer BeginSingleTimeCommands();
         void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
         void CopyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize size);
@@ -254,26 +277,8 @@ class HelloTriangle
         std::vector<VkFence> m_InFlightFences;
         u32 m_CurrentFrame = 0;
         bool m_FramebufferResized = false;
-        const std::vector<Vertex> m_Vertices = 
-        {
-            // First Object
-            { { -0.5f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f } },
-            { { 0.5f, -0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f } },
-            { { 0.5f, 0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } },
-            { { -0.5f, 0.5f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f } },
-            // Second Object
-            { { -0.5f, -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
-            { { 0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f } },
-            { { 0.5f, 0.5f, -0.5f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f } },
-            { { -0.5f, 0.5f, -0.5f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f } }
-        };
-        const std::vector<u16> m_Indices =
-        {
-            // First Object
-            0, 1, 2, 2, 3, 0,
-            // Second Object
-            4, 5, 6, 6, 7, 4
-        };
+        std::vector<Vertex> m_Vertices;
+        std::vector<u32> m_Indices;
         VkBuffer m_VertexBuffer;
         VkDeviceMemory m_VertexBufferMemory;
         VkBuffer m_IndexBuffer;
@@ -338,6 +343,7 @@ void HelloTriangle::InitVulkan()
     CreateTextureImage();
     CreateTextureImageView();
     CreateTextureSampler();
+    LoadModel();
     CreateVertexBuffer();
     CreateIndexBuffer();
     CreateUniformBuffers();
@@ -1311,7 +1317,7 @@ void HelloTriangle::CopyBufferToImage(VkBuffer buffer, VkImage image, u32 width,
 void HelloTriangle::CreateTextureImage()
 {
     i32 texWidth, texHeight, texChannels;
-    stbi_uc* pixels = stbi_load("../assets/textures/jimin.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    stbi_uc* pixels = stbi_load("../assets/textures/viking_room.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     if (pixels == nullptr)
     {
         throw std::runtime_error("Failed to load Texture Image!");
@@ -1395,6 +1401,54 @@ u32 HelloTriangle::FindMemoryType(u32 typeFilter, VkMemoryPropertyFlags properti
     }
 
     throw std::runtime_error("Failed to find suitable memory type!");
+}
+
+void HelloTriangle::LoadModel()
+{
+    tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+    std::string warn, err;
+
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, "../assets/models/viking_room.obj"))
+    {
+        throw std::runtime_error(warn + err);
+    }
+
+    std::unordered_map<Vertex, u32> uniqueVertices{};
+
+    for (const auto& shape : shapes)
+    {
+        for (const auto& index : shape.mesh.indices)
+        {
+            Vertex vertex{};
+
+            vertex.m_Position =
+            {
+                attrib.vertices[3 * index.vertex_index + 0],
+                attrib.vertices[3 * index.vertex_index + 1],
+                attrib.vertices[3 * index.vertex_index + 2]
+            };
+
+            vertex.m_TexCoord =
+            {
+                attrib.texcoords[2 * index.texcoord_index + 0],
+                1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+            };
+
+            vertex.m_Color = { 1.0f, 1.0f, 1.0f };
+
+            if (uniqueVertices.count(vertex) == 0)
+            {
+                uniqueVertices[vertex] = static_cast<u32>(m_Vertices.size());
+                m_Vertices.push_back(vertex);
+            }
+
+            m_Indices.push_back(uniqueVertices[vertex]);
+        }
+    }
+
+
 }
 
 void HelloTriangle::CopyBuffer(VkBuffer src, VkBuffer dst, VkDeviceSize size)
@@ -1647,7 +1701,7 @@ void HelloTriangle::RecordCommandBuffer(VkCommandBuffer commandBuffer, u32 image
     VkDeviceSize offsets[] = { 0 };
 
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer, 0, VK_INDEX_TYPE_UINT16);
+    vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_PipelineLayout, 0, 1, &m_DescriptorSets[m_CurrentFrame], 0, nullptr);
     vkCmdDrawIndexed(commandBuffer, static_cast<u32>(m_Indices.size()), 1, 0, 0, 0);
