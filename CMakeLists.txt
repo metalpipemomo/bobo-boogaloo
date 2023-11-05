@@ -22,6 +22,7 @@ option(GLFW_BUILD_DOCS "Build the GLFW documentation" OFF)
 # Add GLFW submodule and specify GLM include directory
 add_subdirectory(libs/glfw)
 include_directories(libs/glm)
+include_directories(libs/spdlog/include)
 add_subdirectory(libs/Jolt/Build)
 
 # Find Vulkan package
@@ -85,14 +86,29 @@ foreach(SHADER ${SHADER_SOURCES})
     list(APPEND ALL_SHADER_TARGETS ${TARGET_NAME})
 endforeach(SHADER)
 
+set(PCH_HEADER src/bpch.h)
+set(PCH_SOURCE src/bpch.cpp)
+
 # Define your executable target
 add_executable(bobo-boogaloo
     src/HelloTriangle.h
-    src/main.cpp)
+    src/main.cpp
+    ${PCH_SOURCE})
+
+target_precompile_headers(bobo-boogaloo PRIVATE ${PCH_HEADER})
+
+target_include_directories(bobo-boogaloo PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 # Preprocessor Macro
 if (NOT MSVC)
     target_compile_definitions(bobo-boogaloo PRIVATE MAC_TARGET)
+endif()
+
+# Specifies Release/Debug
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_definitions(bobo-boogaloo PRIVATE BOBO_DEBUG)
+else()
+    target_compile_definitions(bobo-boogaloo PRIVATE BOBO_RELEASE)
 endif()
 
 # Link your target against GLFW and Vulkan

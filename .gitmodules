@@ -7,3 +7,6 @@
 [submodule "libs/Jolt"]
 	path = libs/Jolt
 	url = https://github.com/jrouwe/JoltPhysics.git
+[submodule "libs/spdlog"]
+	path = libs/spdlog
+	url = https://github.com/gabime/spdlog.git
