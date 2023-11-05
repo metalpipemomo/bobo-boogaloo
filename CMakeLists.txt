@@ -24,6 +24,7 @@ add_subdirectory(libs/glfw)
 include_directories(libs/glm)
 add_subdirectory(libs/Jolt/Build)
 include_directories(libs/stb)
+include_directories(libs/tinyobjloader)
 
 # Find Vulkan package
 find_package(Vulkan REQUIRED)
