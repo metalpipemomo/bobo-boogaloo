@@ -17,6 +17,8 @@
 #include <cstring>
 
 #include "HelloTriangle.h"
+#include "engine/Window.h" //
+#include "game/Game.h" //
 
 // Disable common warnings triggered by Jolt, you can use JPH_SUPPRESS_WARNING_PUSH / JPH_SUPPRESS_WARNING_POP to store and restore the warning state
 JPH_SUPPRESS_WARNINGS
@@ -31,6 +33,9 @@ int main()
 
     try
     {
+        Window* window = new Window(); //
+        Game* game = new Game(); //
+        window->EventLoop();
         app.Run();
     }
     catch (const std::exception& e)

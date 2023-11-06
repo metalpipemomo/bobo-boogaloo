@@ -19,11 +19,15 @@ option(GLFW_BUILD_EXAMPLES "Build the GLFW example programs" OFF)
 option(GLFW_BUILD_TESTS "Build the GLFW test programs" OFF)
 option(GLFW_BUILD_DOCS "Build the GLFW documentation" OFF)
 
-# Add GLFW submodule and specify GLM include directory
+# Add GLFW and Jolt submodule and specify GLM and FMOD include directory
 add_subdirectory(libs/glfw)
 include_directories(libs/glm)
 include_directories(libs/spdlog/include)
 add_subdirectory(libs/Jolt/Build)
+include_directories(libs/FMODAPI/api/studio/inc)
+include_directories(libs/FMODAPI/api/core/inc)
+link_directories(libs/FMODAPI/api/core/lib/x64)
+link_directories(libs/FMODAPI/api/studio/lib/x64)
 
 # Find Vulkan package
 find_package(Vulkan REQUIRED)
@@ -111,8 +115,8 @@ else()
     target_compile_definitions(bobo-boogaloo PRIVATE BOBO_RELEASE)
 endif()
 
-# Link your target against GLFW and Vulkan
-target_link_libraries(bobo-boogaloo glfw Jolt Vulkan::Vulkan)
+# Link your target against GLFW, Vulkan, and FMOD
+target_link_libraries(bobo-boogaloo glfw Jolt Vulkan::Vulkan fmod_vc.lib fmodstudio_vc.lib)
 
 add_dependencies(bobo-boogaloo ${ALL_SHADER_TARGETS})
 
