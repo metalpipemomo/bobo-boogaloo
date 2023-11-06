@@ -2,6 +2,7 @@
 
 #include "engine/Bobo.h"
 
+#include "engine/Physics/Rigidbody.h"
 class Game
 {
 public:
@@ -23,6 +24,7 @@ private:
 
 		// Add Component 'Transform' to GameObject
 		object->AddComponent<Transform>();
+		//object->AddComponent<Rigidbody>();
 
 		// Get the 'Transform' component from GameObject
 		auto transform = object->GetComponent<Transform>();
