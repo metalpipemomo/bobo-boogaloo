@@ -24,7 +24,6 @@ private:
 
 		// Add Component 'Transform' to GameObject
 		object->AddComponent<Transform>();
-		//object->AddComponent<Rigidbody>();
 
 		// Get the 'Transform' component from GameObject
 		auto transform = object->GetComponent<Transform>();
@@ -44,13 +43,22 @@ private:
 		// Creating a GameObject with a Parent GameObject
 		auto childObject = new GameObject(*object);
 
+		/*------ PHYSICS ------*/
+		auto physicsObjectSphere = new GameObject();
+		auto physicsObjectFloor = new GameObject();
+
+		physicsObjectSphere->AddComponent<Rigidbody>(new SphereShape(0.5f), RVec3(0.0, 100.0, 0.0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		physicsObjectFloor->AddComponent<Rigidbody>(new BoxShape(RVec3(100.0, 1.0, 100.0)), RVec3(0.0, -1.0, 0.0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+
+
+
 		/*------ AUDIO ------*/
 
 		// Audio files are loaded from the src/game/Sounds directory, they must be mp3
 		// The files can be accessed through a string identifier, which corresponds to
 		// the file name, all lowercase without extensions
-		Audio::PlaySound("boom");
-		Audio::PlaySound("punch");
+		//Audio::PlaySound("boom");
+		//Audio::PlaySound("punch");
 
 		/*------ COROUTINES ------*/
 

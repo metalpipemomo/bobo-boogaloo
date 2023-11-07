@@ -7,10 +7,11 @@
 
 #include "Input.h"
 //#include "Model/ModelLoader.h"
-#include "Audio/Audio.h"
+//#include "Audio/Audio.h"
 #include "Time.h"
 #include "EntityComponent/SceneManager.h"
 #include "Coroutine/CoroutineScheduler.h"
+#include "Physics/Physics.h"
 //#include "Renderer/Camera.h"
 //#include "Renderer/TextureLoader.h"
 //#include "Renderer/ShaderLoader.h"
@@ -40,13 +41,14 @@ public:
         Init();
         Input::Init(p_Window);
         Time::Init();
+        Physics::Init();
         //Camera::Init((float)GetWidth() / (float)GetHeight());
         //TextureLoader::Init();
         //ShaderLoader::Init();
         //Renderer::Init();
         SceneManager::Init();
         //ModelLoader::Init();
-        Audio::Init();
+        //Audio::Init();
         CoroutineScheduler::Init();
     }
 
@@ -62,9 +64,9 @@ public:
             // System Frame Updates
             //Renderer::Update();
             Time::Update();
-            Audio::Update();
+           // Audio::Update();
             CoroutineScheduler::Update();
-
+            Physics::Update();
             // System Fixed Updates
             if (Time::DidFixedUpdate())
             {
