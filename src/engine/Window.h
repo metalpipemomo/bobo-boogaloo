@@ -66,10 +66,10 @@ public:
             Time::Update();
            // Audio::Update();
             CoroutineScheduler::Update();
-            Physics::Update();
             // System Fixed Updates
             if (Time::DidFixedUpdate())
             {
+                  Physics::Update();
             }
 
             // Draw
